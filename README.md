@@ -2,6 +2,51 @@
 
 Record EEG from a [Muse](https://choosemuse.com/) headband while watching a video, with synchronized timing markers for frame-accurate alignment.
 
+---
+
+## Quickstart — get running in 3 minutes
+
+> **You need:** [Node.js](https://nodejs.org/) **v18 or newer** and **Google Chrome** (or Edge).
+> If you use [nvm](https://github.com/nvm-sh/nvm), the repo includes an `.nvmrc` so `nvm use` will pick the right version.
+
+### Step 1 — Clone the repo
+
+```bash
+git clone https://github.com/kylemath/EEGVideo.git
+cd EEGVideo
+```
+
+### Step 2 — Install dependencies
+
+The app code lives inside the `EEGVideo/` subfolder. Install from there:
+
+```bash
+cd EEGVideo
+npm install
+```
+
+### Step 3 — Start the dev server
+
+```bash
+npm run dev
+```
+
+You should see output like:
+
+```
+  VITE v5.x.x  ready in XXX ms
+
+  ➜  Local:   http://localhost:5173/
+```
+
+### Step 4 — Open the app
+
+Open **http://localhost:5173** in **Chrome** (or Edge). Safari and Firefox will **not** work because they lack Web Bluetooth support.
+
+That's it — the app is running. See the full usage guide below.
+
+---
+
 ![Disconnected — ready to connect](screenshot-disconnected.png)
 *App before connecting the Muse headband*
 
@@ -18,27 +63,22 @@ Record EEG from a [Muse](https://choosemuse.com/) headband while watching a vide
 
 ## Prerequisites
 
-- **Node.js 18+** (see `.nvmrc`)
-- **Chrome or Edge** (Web Bluetooth is required)
-- The app must be served over **HTTPS or localhost**
+- **Node.js 18+** — download from <https://nodejs.org/> or use `nvm install 18`
+- **Google Chrome or Microsoft Edge** — Web Bluetooth is required; Safari/Firefox are not supported
+- The app must be served over **HTTPS or localhost** (the dev server handles this automatically)
 - A **Muse headband** (Muse 2, Muse S, or Muse 2016)
 
-## Installation
-
-```bash
-cd EEGVideo
-npm install
-```
-
-## Usage
+## Detailed usage
 
 ### 1. Start the dev server
+
+From the `EEGVideo/` subdirectory (where `package.json` lives):
 
 ```bash
 npm run dev
 ```
 
-Open the URL shown in the terminal (default: `http://localhost:5173`).
+Open **http://localhost:5173** in Chrome.
 
 ### 2. Connect your Muse
 
