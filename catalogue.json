@@ -1,0 +1,11 @@
+{
+  "id": "EEGVideo",
+  "title": "EEGVideo",
+  "oneLiner": "Record EEG while watching a synced video",
+  "demoUrl": "https://github.com/kylemath/EEGVideo",
+  "screenshot": "https://raw.githubusercontent.com/kylemath/EEGVideo/main/screenshot.png",
+  "kind": "project",
+  "categories": ["webpage", "eeg", "video"],
+  "tags": ["webpage", "eeg", "video"],
+  "status": "published"
+}
