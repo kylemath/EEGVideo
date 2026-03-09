@@ -1,15 +1,21 @@
 /**
- * Minimal Muse client — Control characteristic only at connect time.
+ * Minimal Muse client for Muse 2016 (MU-02), Muse 2, and Muse S.
  *
- * Key insight from Muse protocol reverse-engineering: EEG characteristics
- * (273e0003–0006) are NOT advertised until AFTER the device receives the
- * preset ("p21") and start ("s") commands. Attempting getCharacteristic()
- * for EEG channels before sending those commands will throw NotFoundError on
- * Muse 2016 (MU-02) and some Muse 2 firmwares.
+ * Protocol notes (from reverse-engineering + Brainimation project):
  *
- * Connection flow:
- *   connect() → control char only
- *   start()   → send h/p21/s/d, wait 500 ms, THEN fetch EEG chars
+ * 1. Control characteristic (273e0001) must have notifications started BEFORE
+ *    sending any commands — the device uses this bidirectional channel.
+ *
+ * 2. On Muse 2016, EEG characteristics (273e0003–0006) only appear AFTER
+ *    sending preset + start commands. On Muse 2/S they may be available
+ *    immediately.
+ *
+ * 3. The device may boot into a limited mode. Sending 'v1' (version query)
+ *    helps transition to normal mode.
+ *
+ * 4. After init commands, we must disconnect and reconnect to force Chrome
+ *    to re-discover the GATT database (Chrome caches characteristics
+ *    per-connection and won't see newly-advertised ones).
  */
 import { Subject, fromEvent } from 'rxjs';
 import { map } from 'rxjs/operators';
@@ -44,13 +50,30 @@ function encodeCommand(cmd) {
   return encoded;
 }
 
+async function writeCmd(controlChar, cmd) {
+  await controlChar.writeValue(encodeCommand(cmd));
+}
+
+/**
+ * Helper: connect to a device, get service + control char, start control
+ * notifications (required for Muse protocol handshake).
+ */
+async function connectAndSetup(device) {
+  console.log('[minimal-muse] Connecting to', device.name || 'Muse', '...');
+  const gatt = await device.gatt.connect();
+  const service = await gatt.getPrimaryService(MUSE_SERVICE);
+  const controlChar = await service.getCharacteristic(CONTROL_CHAR);
+
+  // CRITICAL: start notifications on control char — the Muse requires this
+  // bidirectional channel to be open before it processes commands properly.
+  await controlChar.startNotifications();
+  console.log('[minimal-muse] Control char notifications started');
+
+  return { gatt, service, controlChar };
+}
+
 /**
  * Create a minimal Muse client compatible with Muse 2016, Muse 2, and Muse S.
- *
- * CRITICAL: When reusing a GATT from a failed muse-js attempt, Chrome's GATT
- * characteristic cache is stale. We MUST disconnect and reconnect the same
- * device to force fresh service discovery. The device reference survives
- * disconnect, so no second Bluetooth picker is needed.
  *
  * @param {BluetoothRemoteGATTServer|null} existingGatt - GATT from a failed
  *   muse-js attempt. The device will be disconnected and reconnected fresh.
@@ -61,7 +84,7 @@ export async function connectMuseMinimal(existingGatt = null) {
 
   if (existingGatt) {
     device = existingGatt.device;
-    console.log('[minimal-muse] Disconnecting stale muse-js GATT to clear characteristic cache...');
+    console.log('[minimal-muse] Disconnecting stale muse-js GATT...');
     if (existingGatt.connected) existingGatt.disconnect();
     await new Promise((r) => setTimeout(r, 300));
   } else {
@@ -70,14 +93,53 @@ export async function connectMuseMinimal(existingGatt = null) {
     });
   }
 
-  console.log('[minimal-muse] Connecting to', device.name || 'Muse', '...');
-  const gatt = await device.gatt.connect();
-  const service = await gatt.getPrimaryService(MUSE_SERVICE);
-  const controlChar = await service.getCharacteristic(CONTROL_CHAR);
-  console.log('[minimal-muse] Control characteristic OK');
+  let { gatt, service, controlChar } = await connectAndSetup(device);
 
-  // eegReadings is a hot Subject; consumers subscribe before start() is called.
-  // start() feeds it once EEG characteristics appear post-init-commands.
+  // Check if EEG chars are available immediately (Muse 2/S).
+  let eegCharsReady = false;
+  try {
+    await service.getCharacteristic(EEG_CHARS[0]);
+    eegCharsReady = true;
+    console.log('[minimal-muse] EEG chars available on first connect');
+  } catch {
+    console.log('[minimal-muse] EEG chars not available yet — sending init commands...');
+  }
+
+  if (!eegCharsReady) {
+    // Send init commands to wake the device / exit boot mode.
+    // 'v1' = version query (helps exit boot mode on some firmware).
+    // 'p21' = preset 21 (EEG mode). 's' = start. 'd' = resume.
+    await writeCmd(controlChar, 'v1');
+    await new Promise((r) => setTimeout(r, 100));
+    await writeCmd(controlChar, 'h');
+    await writeCmd(controlChar, 'p21');
+    await writeCmd(controlChar, 's');
+    await writeCmd(controlChar, 'd');
+    console.log('[minimal-muse] Init commands sent, waiting for device...');
+
+    // After init commands the Muse 2016 adds EEG characteristics to its GATT
+    // database. Chrome caches characteristics per-connection, so we MUST
+    // disconnect and reconnect to see the new ones.
+    await new Promise((r) => setTimeout(r, 500));
+
+    if (gatt.connected) gatt.disconnect();
+    await new Promise((r) => setTimeout(r, 500));
+
+    console.log('[minimal-muse] Reconnecting to discover EEG characteristics...');
+    ({ gatt, service, controlChar } = await connectAndSetup(device));
+
+    // Verify EEG chars are now available.
+    try {
+      await service.getCharacteristic(EEG_CHARS[0]);
+      console.log('[minimal-muse] EEG chars found after reconnect');
+    } catch (e) {
+      throw new Error(
+        'EEG characteristics still not available after init + reconnect. ' +
+        'Try turning the Muse off and on again. (' + e.message + ')'
+      );
+    }
+  }
+
   const eegReadings = new Subject();
   const eegSubscriptions = [];
 
@@ -106,48 +168,25 @@ export async function connectMuseMinimal(existingGatt = null) {
     service,
     controlChar,
     eegReadings,
-    deviceName: gatt.device?.name || null,
+    deviceName: device.name || null,
 
     async sendCommand(cmd) {
       await this.controlChar.writeValue(encodeCommand(cmd));
     },
 
     async start() {
-      // Try getting EEG chars immediately (works on Muse 2/S with fresh GATT).
-      // If not found, send init commands and retry (needed for Muse 2016).
-      let eegChars = await this._tryGetEEGChars();
+      // Init commands (may already have been sent during connect for Muse 2016,
+      // but safe to re-send for Muse 2/S path or if state is uncertain).
+      await writeCmd(this.controlChar, 'h');
+      await writeCmd(this.controlChar, 'p21');
+      await writeCmd(this.controlChar, 's');
+      await writeCmd(this.controlChar, 'd');
 
-      if (!eegChars) {
-        console.log('[minimal-muse] EEG chars not yet available, sending init commands...');
-        await this.sendCommand('h');
-        await this.controlChar.writeValue(encodeCommand('p21'));
-        await this.sendCommand('s');
-        await this.sendCommand('d');
-
-        const delays = [500, 1000, 2000];
-        for (let attempt = 0; attempt < delays.length; attempt++) {
-          await new Promise((resolve) => setTimeout(resolve, delays[attempt]));
-          eegChars = await this._tryGetEEGChars();
-          if (eegChars) {
-            console.log(`[minimal-muse] Got EEG chars after init (attempt ${attempt + 1})`);
-            break;
-          }
-          console.warn(`[minimal-muse] EEG chars not ready (attempt ${attempt + 1}/${delays.length})`);
-          if (attempt === delays.length - 1) {
-            throw new Error('EEG characteristics not available. Device may need a restart.');
-          }
-        }
-      } else {
-        console.log('[minimal-muse] EEG chars available immediately');
-        await this.sendCommand('h');
-        await this.controlChar.writeValue(encodeCommand('p21'));
-        await this.sendCommand('s');
-        await this.sendCommand('d');
-      }
-
+      // Get all 4 EEG characteristics and start notifications.
       for (let ch = 0; ch < 4; ch++) {
-        await eegChars[ch].startNotifications();
-        const sub = fromEvent(eegChars[ch], 'characteristicvaluechanged')
+        const char = await this.service.getCharacteristic(EEG_CHARS[ch]);
+        await char.startNotifications();
+        const sub = fromEvent(char, 'characteristicvaluechanged')
           .pipe(
             map((ev) => ev.target.value),
             map((dv) => {
@@ -163,24 +202,12 @@ export async function connectMuseMinimal(existingGatt = null) {
       console.log('[minimal-muse] EEG stream started (4 channels)');
     },
 
-    async _tryGetEEGChars() {
-      try {
-        const chars = [];
-        for (let ch = 0; ch < 4; ch++) {
-          chars.push(await this.service.getCharacteristic(EEG_CHARS[ch]));
-        }
-        return chars;
-      } catch {
-        return null;
-      }
-    },
-
     async pause() {
-      await this.sendCommand('h');
+      await writeCmd(this.controlChar, 'h');
     },
 
     async resume() {
-      await this.sendCommand('d');
+      await writeCmd(this.controlChar, 'd');
     },
 
     disconnect() {
