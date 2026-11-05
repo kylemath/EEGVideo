@@ -1,10 +1,13 @@
 # EEGVideo — EEG-Video Sync
 
-Record EEG from a [Muse](https://choosemuse.com/) headband while watching a video, with synchronized timing markers for frame-accurate alignment.
+Record EEG from a [Muse](https://choosemuse.com/) headband (Muse S Athena, Muse S, Muse 2, or Muse 2016) while watching a video or recording from your camera, with synchronized timing markers for frame-accurate alignment.
+
+### 🌐 Live Web App (No Install Required)
+👉 **[https://kylemath.github.io/EEGVideo/](https://kylemath.github.io/EEGVideo/)** *(Open in Google Chrome, Edge, or Opera for Web Bluetooth)*
 
 ---
 
-## Quickstart — get running in 3 minutes
+## Local Development — get running in 3 minutes
 
 > **You need:** [Node.js](https://nodejs.org/) **v18 or newer** and **Google Chrome** (or Edge).
 > If you use [nvm](https://github.com/nvm-sh/nvm), the repo includes an `.nvmrc` so `nvm use` will pick the right version.
