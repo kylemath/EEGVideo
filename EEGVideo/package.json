@@ -10,7 +10,7 @@
   },
   "dependencies": {
     "@neurosity/pipes": "^4.0.0",
-    "muse-js": "^3.3.0",
+    "muse-js": "github:kylemath/muse-js",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "rxjs": "^7.8.1"

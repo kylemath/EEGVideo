@@ -11,6 +11,7 @@ export default function MuseConnect({ onStreamReady, onQualityUpdate }) {
   const [status, setStatus] = useState('disconnected');
   const [error, setError] = useState(null);
   const [qualitySub, setQualitySub] = useState(null);
+  const [deviceInfo, setDeviceInfo] = useState(null);
 
   const handleConnect = useCallback(async () => {
     setError(null);
@@ -36,11 +37,17 @@ export default function MuseConnect({ onStreamReady, onQualityUpdate }) {
       setQualitySub(sub);
 
       await startMuseStreaming();
+      setDeviceInfo({
+        name: client.deviceName || 'Muse',
+        isAthena: !!client.isAthena,
+        preset: client.preset || null,
+      });
       setStatus('connected');
       onStreamReady?.(client);
     } catch (err) {
       setError(err?.message || 'Connection failed');
       setStatus('disconnected');
+      setDeviceInfo(null);
     }
   }, [onStreamReady, onQualityUpdate]);
 
@@ -49,6 +56,7 @@ export default function MuseConnect({ onStreamReady, onQualityUpdate }) {
     setQualitySub(null);
     await disconnectMuse();
     setStatus('disconnected');
+    setDeviceInfo(null);
     onStreamReady?.(null);
     onQualityUpdate?.(null);
   }, [qualitySub, onStreamReady, onQualityUpdate]);
@@ -89,7 +97,10 @@ export default function MuseConnect({ onStreamReady, onQualityUpdate }) {
           }}
         >
           {status === 'connecting' && 'Connecting...'}
-          {status === 'connected' && 'Connected'}
+          {status === 'connected' &&
+            (deviceInfo
+              ? `Connected: ${deviceInfo.name} (${deviceInfo.isAthena ? 'Athena' : 'Classic'})`
+              : 'Connected')}
           {status === 'disconnected' && (error || 'Disconnected')}
         </span>
         {error && (

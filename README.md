@@ -55,7 +55,7 @@ That's it — the app is running. See the full usage guide below.
 
 ## Features
 
-- **Muse connection** via Web Bluetooth — works with Muse 2, Muse S, and Muse 2016
+- **Muse connection** via Web Bluetooth — works directly in the browser with **Muse S Athena (Gen 3 / MS-03)**, Muse S, Muse 2, and Muse 2016 (no Muse mobile app or forwarding required)
 - **Signal quality** head map showing electrode contact (TP9, AF7, AF8, TP10)
 - **Live EEG** 4-channel chart (2 s window, 256 Hz)
 - **Synchronized recording** — EEG samples and video timing markers (button press, first frame, periodic frame markers) saved to a single CSV
@@ -66,7 +66,7 @@ That's it — the app is running. See the full usage guide below.
 - **Node.js 18+** — download from <https://nodejs.org/> or use `nvm install 18`
 - **Google Chrome or Microsoft Edge** — Web Bluetooth is required; Safari/Firefox are not supported
 - The app must be served over **HTTPS or localhost** (the dev server handles this automatically)
-- A **Muse headband** (Muse 2, Muse S, or Muse 2016)
+- A **Muse headband** (Muse S Athena, Muse S, Muse 2, or Muse 2016)
 
 ## Detailed usage
 
@@ -82,12 +82,10 @@ Open **http://localhost:5173** in Chrome.
 
 ### 2. Connect your Muse
 
-1. Turn on your Muse headband.
+1. Turn on your Muse headband (make sure it is **not** connected to the Muse mobile app on your phone so it advertises over Bluetooth).
 2. Click **Connect Muse** in the app.
 3. Select your device from the browser's Bluetooth pairing dialog.
-4. The status will change to **Connected** and the Signal Quality head map will update.
-
-> **Tip:** If the headband won't pair, open the official Muse app on your phone first, connect once, then disconnect and try the web app again.
+4. The app automatically detects whether your device uses the **Muse S Athena** multiplexed protocol (`273e0013`) or the **Classic** Muse protocol (`273e0003–0006`), initializes streaming, and updates the Signal Quality head map.
 
 ### 3. Check signal quality
 
