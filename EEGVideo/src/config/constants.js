@@ -11,6 +11,11 @@ export const FRAME_MARKER_INTERVAL = 10;
 export const AUDIO_MARKER_INTERVAL = 512;
 export const DATA_FLUSH_INTERVAL_MS = 2000;
 
+// Mains line-noise notch filter, applied to live display, signal-quality
+// check and recorded data. Use 50 for regions with 50 Hz mains.
+export const NOTCH_FREQ_HZ = 60;
+export const NOTCH_Q = 30;
+
 export const QUALITY_GOOD_MIN = 1.5;
 export const QUALITY_GOOD_MAX = 10;
 

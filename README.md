@@ -59,6 +59,7 @@ That's it — the app is running. See the full usage guide below.
 ## Features
 
 - **Muse connection** via Web Bluetooth — works directly in the browser with **Muse S Athena (Gen 3 / MS-03)**, Muse S, Muse 2, and Muse 2016 (no Muse mobile app or forwarding required)
+- **60 Hz line-noise notch filter** applied to all EEG, during setup (live chart and signal quality) and to the recorded CSV (frequency set by `NOTCH_FREQ_HZ` in `src/config/constants.js`; use 50 for 50 Hz mains)
 - **Signal quality** head map showing electrode contact (TP9, AF7, AF8, TP10)
 - **Live EEG** 4-channel chart (2 s window, 256 Hz)
 - **Synchronized recording** — EEG samples and video timing markers (button press, first frame, periodic frame markers) saved to a single CSV

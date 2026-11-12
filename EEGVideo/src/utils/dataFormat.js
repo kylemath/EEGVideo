@@ -1,7 +1,9 @@
 /**
  * EEG data and marker file format utilities.
  */
-import { EEG_CHANNELS } from '../config/constants.js';
+import { EEG_CHANNELS, NOTCH_FREQ_HZ, NOTCH_Q } from '../config/constants.js';
+
+const FILTER_HEADER = `# Filter: ${NOTCH_FREQ_HZ} Hz notch (IIR biquad, Q=${NOTCH_Q}, causal)`;
 
 /** Column names for combined output (no comment prefix). */
 export const COMBINED_COLUMNS =
@@ -14,6 +16,7 @@ export function createEegFileHeader(startTime) {
     '# EEG Data - Muse 2',
     `# Channels: ${EEG_CHANNELS.join(',')}`,
     '# SamplingRate: 256',
+    FILTER_HEADER,
     `# StartTime: ${startTime}`,
     '# Format: uncorrected_time,corrected_time,' + EEG_CHANNELS.join(','),
   ];
@@ -36,6 +39,7 @@ export function createCombinedFileHeader(startTime) {
     '# EEG + Markers - Muse 2',
     `# Channels: ${EEG_CHANNELS.join(',')}`,
     '# SamplingRate: 256',
+    FILTER_HEADER,
     `# StartTime: ${startTime}`,
     COMBINED_COLUMNS,
   ];

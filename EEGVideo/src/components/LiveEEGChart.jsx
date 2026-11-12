@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { zipSamples } from 'muse-js';
+import { notchFilter } from '../streams/notchFilter.js';
 import { EEG_SAMPLE_RATE, EEG_CHANNELS } from '../config/constants.js';
 
 const CHART_COLORS = ['#3fb950', '#58a6ff', '#d29922', '#f778ba'];
@@ -18,7 +19,7 @@ export default function LiveEEGChart({ museClient }) {
     const buffersRef = { current: EEG_CHANNELS.map(() => []) };
     let rafId = null;
 
-    const stream = zipSamples(museClient.eegReadings);
+    const stream = zipSamples(museClient.eegReadings).pipe(notchFilter());
     const sub = stream.subscribe((sample) => {
       if (!sample?.data) return;
       for (let ch = 0; ch < 4; ch++) {

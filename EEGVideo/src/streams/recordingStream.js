@@ -4,6 +4,7 @@
 import { pipe } from 'rxjs';
 import { filter, bufferTime, tap } from 'rxjs/operators';
 import { zipSamples } from 'muse-js';
+import { notchFilter } from './notchFilter.js';
 import { DATA_FLUSH_INTERVAL_MS } from '../config/constants.js';
 import {
   createEegFileHeader,
@@ -15,7 +16,7 @@ const SAMPLE_INTERVAL = 1 / 256;
 
 export function createRecordingStream(museClient, onFlush) {
   if (!museClient?.eegReadings) return null;
-  return zipSamples(museClient.eegReadings);
+  return zipSamples(museClient.eegReadings).pipe(notchFilter());
 }
 
 export function recordingPipe(startTime, onFlush) {
