@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Muse S Athena — BLE Bridge & Live Physiology Engine</title>
+  <link rel="stylesheet" href="src/styles.css" />
+</head>
+<body class="bridge-body">
+  <div class="header">
+    <div>
+      <h1>Muse S Athena — Persistent BLE Bridge &amp; DSP Engine</h1>
+      <div class="header-sub">
+        Keep this pinned tab open while browsing so Web Bluetooth stays connected across all Chrome tabs.
+      </div>
+    </div>
+    <div style="display:flex; gap:8px; align-items:center;">
+      <span id="osBadge" class="badge" title="Run analysis/macos_companion.py for OS-wide IDE/Finder/Music tracking">OS Bridge: Browser-Only</span>
+      <span id="screenBadge" class="badge">Screenshots: Chrome Tab</span>
+      <span id="bleBadge" class="badge">Disconnected</span>
+      <span id="recBadge" class="badge" style="display:none;">REC</span>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">
+      <span>1. Headband &amp; Whole-Desktop Capture Controls</span>
+      <span id="batteryText">Battery: --</span>
+    </div>
+    <div class="btn-row" style="align-items:center;">
+      <button id="connectBtn" class="primary">Connect Muse S Athena (Bluetooth)</button>
+      <button id="simulateBtn">Simulate Athena Stream</button>
+      <button id="disconnectBtn" disabled>Disconnect</button>
+      <button id="resetFnirsBtn" disabled>Zero fNIRS Baseline</button>
+      <button id="shareScreenBtn" style="border-color:#a855f7; color:#e9d5ff;" title="Share Entire Screen so screenshots capture Antigravity IDE, Finder, Music, and all macOS apps">
+        Share Whole Screen (IDE / Finder / Desktop)
+      </button>
+      <button id="baseline60Btn" title="Zero fNIRS and mark a 60-second eyes-open resting baseline">
+        Run 60s Baseline
+      </button>
+      <label style="margin-left:auto; font-size:11px; color:var(--muted);">
+        Preset:
+        <select id="presetSelect">
+          <option value="p1035">p1035 — 4ch EEG + 4ch Optics (730/850nm fNIRS + PPG)</option>
+          <option value="p1036">p1036 — 4ch EEG + 4ch Optics (High Power)</option>
+          <option value="p1033">p1033 — 4ch EEG + 8ch Optics (Inner+Outer fNIRS)</option>
+          <option value="p1034">p1034 — 4ch EEG + 8ch Optics (High Power)</option>
+          <option value="p21">p21 — 4ch EEG + Motion only</option>
+        </select>
+      </label>
+    </div>
+    <div id="errorBox" style="color:#f87171; font-size:12px; margin-top:6px; display:none;"></div>
+  </div>
+
+  <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
+    <div class="card">
+      <div class="card-title">
+        <span>Cardiovascular (PPG 64 Hz) &amp; Prefrontal fNIRS (730/850 nm MBLL)</span>
+      </div>
+      <div class="metrics-grid">
+        <div class="metric-box">
+          <span class="metric-label">Heart Rate</span>
+          <span id="mHr" class="metric-value">--</span><span class="metric-unit">BPM</span>
+        </div>
+        <div class="metric-box">
+          <span class="metric-label">HRV (RMSSD)</span>
+          <span id="mHrv" class="metric-value">--</span><span class="metric-unit">ms</span>
+        </div>
+        <div class="metric-box">
+          <span class="metric-label">Head Stillness</span>
+          <span id="mStill" class="metric-value">--</span><span class="metric-unit">%</span>
+        </div>
+        <div class="metric-box">
+          <span class="metric-label">&Delta;HbO2 (Oxy)</span>
+          <span id="mHbo2" class="metric-value" style="color:#f87171;">0.00</span><span class="metric-unit">&mu;M</span>
+        </div>
+        <div class="metric-box">
+          <span class="metric-label">&Delta;HHb (Deoxy)</span>
+          <span id="mHhb" class="metric-value" style="color:#38bdf8;">0.00</span><span class="metric-unit">&mu;M</span>
+        </div>
+        <div class="metric-box">
+          <span class="metric-label">&Delta;HbT (Total)</span>
+          <span id="mHbt" class="metric-value" style="color:#4ade80;">0.00</span><span class="metric-unit">&mu;M</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">
+        <span>EEG Spectral Indices (256 Hz) &amp; Electrode Quality</span>
+      </div>
+      <div class="metrics-grid" style="margin-bottom:8px;">
+        <div class="metric-box">
+          <span class="metric-label">Focus (&beta;/(&alpha;+&theta;))</span>
+          <span id="mFocus" class="metric-value" style="color:#38bdf8;">--</span>
+        </div>
+        <div class="metric-box">
+          <span class="metric-label">Calm (&alpha;/&theta;)</span>
+          <span id="mCalm" class="metric-value" style="color:#a855f7;">--</span>
+        </div>
+        <div class="metric-box">
+          <span class="metric-label">Frontal Asym (FAA)</span>
+          <span id="mFaa" class="metric-value">--</span>
+        </div>
+      </div>
+      <div class="electrodes-row">
+        <div id="elTP9" class="electrode-pill">TP9: --</div>
+        <div id="elAF7" class="electrode-pill">AF7: --</div>
+        <div id="elAF8" class="electrode-pill">AF8: --</div>
+        <div id="elTP10" class="electrode-pill">TP10: --</div>
+      </div>
+      <div id="tagsContainer" class="tags-wrap"></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">
+      <span>Live Prefrontal Hemoglobin (&Delta;HbO2 Red, &Delta;HHb Blue, &Delta;HbT Green) &amp; Focus Trace</span>
+      <span id="traceSub">4 Hz State Stream</span>
+    </div>
+    <canvas id="hemoCanvas" class="trace-canvas" width="900" height="120"></canvas>
+  </div>
+
+  <div class="card">
+    <div class="card-title">
+      <span>Recording &amp; Dataset Export (Python / R Compatible)</span>
+      <span id="countsText">0 physio ticks | 0 events | 0 screenshots</span>
+    </div>
+    <div class="btn-row">
+      <button id="startRecBtn" class="record-btn">Start Synced Recording</button>
+      <button id="stopRecBtn" class="stop-btn" disabled>Stop Recording</button>
+      <button id="exportBundleBtn" class="export-btn">Export Full Bundle (.tar: CSVs + JSONL + Screenshots + Python)</button>
+      <button id="exportPhysioCsvBtn">Physiology CSV</button>
+      <button id="exportEventsCsvBtn">Events CSV</button>
+      <button id="exportJsonlBtn">Session JSONL</button>
+    </div>
+  </div>
+
+  <script type="module" src="src/ble-bridge.js"></script>
+</body>
+</html>

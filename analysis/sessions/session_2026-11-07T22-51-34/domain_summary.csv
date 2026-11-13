@@ -1,0 +1,9 @@
+domain_short,raw_domain,activity_category,n_ticks,approx_duration_sec,n_events,n_clicks,n_screenshots,hr_median_bpm,hr_iqr_bpm,hr_mean_bpm,hr_sd_bpm,hrv_median_ms,hbo2_mean_uM,hbo2_sd_uM,hhb_mean_uM,hbt_mean_uM,focus_mean,focus_sd,focus_median,calm_mean,calm_sd,faa_mean,delta_rel_mean,theta_rel_mean,alpha_rel_mean,beta_rel_mean,gamma_rel_mean,stillness_mean_pct,frontal_usable_pct
+PubMed,pubmed.ncbi.nlm.nih.gov,Scientific Literature,25,24.4,13,1,6,66.8,1.2,66.9,1.03,108.3,17.407,0.525,12.979,30.386,1.078,0.43,1.049,0.572,0.348,-0.183,0.3557,0.1531,0.0804,0.2442,0.1666,81.6,100.0
+Google Scholar,scholar.google.com,Scientific Literature,23,22.4,5,0,3,69.8,1.3,70.76,1.61,93.2,16.546,0.199,12.163,28.709,0.954,0.361,0.847,0.753,0.465,0.248,0.3321,0.1637,0.1057,0.2401,0.1584,71.3,100.0
+Akamai Univ,www.akamai.university,Learning / Coursework,38,37.1,6,0,6,69.8,1.9,71.86,7.67,127.05,16.639,0.391,7.334,23.973,0.929,0.384,0.848,0.735,0.367,0.39,0.3229,0.1709,0.1102,0.2425,0.1534,87.1,100.0
+LinkedIn,www.linkedin.com,Social / Professional,52,50.7,20,2,11,69.2,1.35,70.88,6.77,110.6,17.109,0.263,8.968,26.077,0.919,0.301,0.939,0.653,0.244,0.556,0.3192,0.1733,0.1071,0.2481,0.1522,89.5,100.0
+Facebook,www.facebook.com,Social / Professional,55,53.7,21,1,6,80.0,19.6,82.77,12.16,123.8,17.161,0.396,10.71,27.871,0.851,0.357,0.809,0.567,0.269,0.287,0.3721,0.1798,0.0937,0.2168,0.1376,80.1,100.0
+Google Search,www.google.com,Web Search,147,143.4,82,16,38,76.8,10.6,78.86,10.06,107.8,16.251,1.043,8.366,24.618,0.768,0.304,0.761,0.62,0.287,0.381,0.3776,0.1779,0.1017,0.2061,0.1367,84.7,98.6
+Antigravity,antigravity.google.com,AI / Agentic Coding,43,42.0,14,0,10,65.1,0.0,65.3,0.55,111.1,5.818,0.71,2.394,8.212,0.566,0.241,0.556,0.639,0.366,1.543,0.2635,0.0999,0.0543,0.0804,0.5019,83.2,0.0
+Gmail,mail.google.com,Email / Triage,471,459.6,54,0,51,76.8,15.5,81.96,18.75,111.5,6.649,6.038,0.295,6.944,0.385,0.324,0.281,0.437,0.296,0.056,0.5533,0.1799,0.0709,0.0918,0.1041,55.3,55.8

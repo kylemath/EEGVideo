@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Muse S Athena Logger</title>
+  <link rel="stylesheet" href="src/styles.css" />
+</head>
+<body class="popup-body">
+  <div class="header">
+    <div>
+      <h1>Muse S Athena Sync Logger</h1>
+      <div class="header-sub">EEG &bull; fNIRS (HbO2/HHb/HbT) &bull; HR/HRV &bull; Actions &amp; Screenshots</div>
+    </div>
+    <div style="display:flex; gap:5px; align-items:center;">
+      <span id="bleBadge" class="badge">Offline</span>
+      <span id="recBadge" class="badge" style="display:none;">REC</span>
+    </div>
+  </div>
+
+  <!-- Connection & Recording Controls -->
+  <div class="card">
+    <div class="btn-row">
+      <button id="openBridgeBtn" class="primary" title="Opens persistent BLE Bridge tab to pair Muse S Athena">
+        Connect Muse
+      </button>
+      <button id="simBtn" title="Start realistic synthetic Muse S Athena stream">
+        Simulate
+      </button>
+      <button id="zeroFnirsBtn" title="Re-zero ΔHbO2 / ΔHHb / ΔHbT baseline">
+        Zero fNIRS
+      </button>
+      <button id="recordToggleBtn" class="record-btn" style="margin-left:auto;">
+        Start Rec
+      </button>
+    </div>
+  </div>
+
+  <!-- Live Physiological State -->
+  <div class="card">
+    <div class="card-title">
+      <span>Live Physiological State</span>
+      <span id="batterySpan">--</span>
+    </div>
+
+    <div class="metrics-grid" style="margin-bottom:6px;">
+      <div class="metric-box">
+        <span class="metric-label">Heart Rate</span>
+        <span id="pHr" class="metric-value">--</span><span class="metric-unit">BPM</span>
+      </div>
+      <div class="metric-box">
+        <span class="metric-label">HRV (RMSSD)</span>
+        <span id="pHrv" class="metric-value">--</span><span class="metric-unit">ms</span>
+      </div>
+      <div class="metric-box">
+        <span class="metric-label">Stillness</span>
+        <span id="pStill" class="metric-value">--</span><span class="metric-unit">%</span>
+      </div>
+
+      <div class="metric-box">
+        <span class="metric-label">&Delta;HbO2 (Oxy)</span>
+        <span id="pHbo2" class="metric-value" style="color:#f87171;">0.00</span><span class="metric-unit">&mu;M</span>
+      </div>
+      <div class="metric-box">
+        <span class="metric-label">&Delta;HHb (Deoxy)</span>
+        <span id="pHhb" class="metric-value" style="color:#38bdf8;">0.00</span><span class="metric-unit">&mu;M</span>
+      </div>
+      <div class="metric-box">
+        <span class="metric-label">&Delta;HbT (Total)</span>
+        <span id="pHbt" class="metric-value" style="color:#4ade80;">0.00</span><span class="metric-unit">&mu;M</span>
+      </div>
+
+      <div class="metric-box">
+        <span class="metric-label">Focus (&beta;/(&alpha;+&theta;))</span>
+        <span id="pFocus" class="metric-value" style="color:#38bdf8;">--</span>
+      </div>
+      <div class="metric-box">
+        <span class="metric-label">Calm (&alpha;/&theta;)</span>
+        <span id="pCalm" class="metric-value" style="color:#a855f7;">--</span>
+      </div>
+      <div class="metric-box">
+        <span class="metric-label">Frontal Asym</span>
+        <span id="pFaa" class="metric-value">--</span>
+      </div>
+    </div>
+
+    <!-- Relative EEG Band Powers -->
+    <div class="bars-list">
+      <div class="bar-row">
+        <span>Delta (1-4Hz)</span>
+        <div class="bar-track"><div id="barDelta" class="bar-fill" style="width:0%; background:#64748b;"></div></div>
+        <span id="valDelta">0%</span>
+      </div>
+      <div class="bar-row">
+        <span>Theta (4-8Hz)</span>
+        <div class="bar-track"><div id="barTheta" class="bar-fill" style="width:0%; background:#a855f7;"></div></div>
+        <span id="valTheta">0%</span>
+      </div>
+      <div class="bar-row">
+        <span>Alpha (8-13Hz)</span>
+        <div class="bar-track"><div id="barAlpha" class="bar-fill" style="width:0%; background:#22c55e;"></div></div>
+        <span id="valAlpha">0%</span>
+      </div>
+      <div class="bar-row">
+        <span>Beta (13-30Hz)</span>
+        <div class="bar-track"><div id="barBeta" class="bar-fill" style="width:0%; background:#38bdf8;"></div></div>
+        <span id="valBeta">0%</span>
+      </div>
+      <div class="bar-row">
+        <span>Gamma (30-45)</span>
+        <div class="bar-track"><div id="barGamma" class="bar-fill" style="width:0%; background:#f59e0b;"></div></div>
+        <span id="valGamma">0%</span>
+      </div>
+    </div>
+
+    <div class="electrodes-row" style="margin-top:8px;">
+      <div id="pTP9" class="electrode-pill">TP9</div>
+      <div id="pAF7" class="electrode-pill">AF7</div>
+      <div id="pAF8" class="electrode-pill">AF8</div>
+      <div id="pTP10" class="electrode-pill">TP10</div>
+    </div>
+
+    <div id="pTags" class="tags-wrap"></div>
+  </div>
+
+  <!-- Manual Tagging -->
+  <div class="card">
+    <div class="card-title">
+      <span>Tag Moment + Capture Screenshot</span>
+    </div>
+    <div class="tag-input-row">
+      <input id="tagInput" type="text" placeholder="e.g. deep debugging, flow state, reading docs..." />
+      <button id="tagBtn" class="primary">Tag</button>
+    </div>
+  </div>
+
+  <!-- Capture & Privacy Configuration -->
+  <div class="card">
+    <div class="card-title">
+      <span>Capture &amp; Privacy Settings</span>
+    </div>
+    <div class="config-grid">
+      <div class="config-item">
+        <span>Periodic Shot</span>
+        <select id="cfgInterval">
+          <option value="0">Off</option>
+          <option value="3">Every 3s</option>
+          <option value="5">Every 5s</option>
+          <option value="10">Every 10s</option>
+          <option value="30">Every 30s</option>
+          <option value="60">Every 60s</option>
+        </select>
+      </div>
+      <div class="config-item">
+        <span>Shot on Click</span>
+        <input id="cfgClickShot" type="checkbox" checked />
+      </div>
+      <div class="config-item">
+        <span>Shot on Nav</span>
+        <input id="cfgNavShot" type="checkbox" checked />
+      </div>
+      <div class="config-item" title="When unchecked, logs only typing speed (WPM), IKI, and backspace count">
+        <span>Log Key Text</span>
+        <input id="cfgKeyText" type="checkbox" />
+      </div>
+      <div class="config-item" style="grid-column: span 2;" title="Also save raw 256 Hz EEG & 64 Hz Optics samples">
+        <span>Save Raw 256 Hz EEG &amp; 64 Hz Optics Stream</span>
+        <input id="cfgRawSensors" type="checkbox" />
+      </div>
+    </div>
+  </div>
+
+  <!-- Dataset Export -->
+  <div class="card" style="margin-bottom:0;">
+    <div class="card-title">
+      <span>Export Synchronized Dataset</span>
+      <span id="pCounts">0 ticks &bull; 0 events &bull; 0 shots</span>
+    </div>
+    <div class="btn-row">
+      <button id="expTarBtn" class="export-btn" style="flex:1;">
+        Download Bundle (.tar: CSVs + JSONL + Shots + Python)
+      </button>
+    </div>
+    <div class="btn-row" style="margin-top:6px;">
+      <button id="expPhysioBtn" style="flex:1;">Physio CSV</button>
+      <button id="expEventsBtn" style="flex:1;">Events CSV</button>
+      <button id="expJsonlBtn" style="flex:1;">JSONL</button>
+      <button id="clearBtn" title="Clear stored session records">Clear</button>
+    </div>
+  </div>
+
+  <script type="module" src="src/popup.js"></script>
+</body>
+</html>

@@ -1,0 +1,43 @@
+{
+  "manifest_version": 3,
+  "name": "Muse S Athena — Brain & Computer-Use Sync Logger",
+  "version": "1.0.0",
+  "description": "Synchronizes Muse S Athena EEG, fNIRS (HbO2/HHb/HbT), Heart Rate/HRV, and IMU with mouse, keyboard, scroll, DOM context, and screenshots.",
+  "permissions": [
+    "activeTab",
+    "tabs",
+    "storage",
+    "unlimitedStorage",
+    "downloads",
+    "alarms",
+    "scripting"
+  ],
+  "host_permissions": [
+    "<all_urls>"
+  ],
+  "background": {
+    "service_worker": "src/background.js",
+    "type": "module"
+  },
+  "action": {
+    "default_title": "Muse S Athena Logger",
+    "default_popup": "popup.html"
+  },
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["src/content.js"],
+      "run_at": "document_idle",
+      "all_frames": false
+    }
+  ],
+  "web_accessible_resources": [
+    {
+      "resources": [
+        "ble-bridge.html",
+        "src/*"
+      ],
+      "matches": ["<all_urls>"]
+    }
+  ]
+}
