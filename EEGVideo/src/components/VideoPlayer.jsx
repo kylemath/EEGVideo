@@ -6,6 +6,7 @@ import {
   formatCombinedMarkerRow,
 } from '../utils/dataFormat.js';
 import { zipSamples } from 'muse-js';
+import { notchFilter } from '../streams/notchFilter.js';
 import { FRAME_MARKER_INTERVAL, AUDIO_MARKER_INTERVAL } from '../config/constants.js';
 
 export default function VideoPlayer({ mode, museClient, videoUrl, onVideoUrlChange, importedMarkers = [] }) {
@@ -44,7 +45,7 @@ export default function VideoPlayer({ mode, museClient, videoUrl, onVideoUrlChan
     });
     addMarker('button_press', 0, '');
 
-    const eegStream = zipSamples(museClient.eegReadings);
+    const eegStream = zipSamples(museClient.eegReadings).pipe(notchFilter());
     const eegSub = eegStream.subscribe((s) => {
       if (!s?.data) return;
       const t = (performance.now() / 1000) - startTimeRef.current;

@@ -5,6 +5,7 @@
 import { pipe } from 'rxjs';
 import { map, bufferCount } from 'rxjs/operators';
 import { zipSamples } from 'muse-js';
+import { notchFilter } from './notchFilter.js';
 import { EEG_SAMPLE_RATE, EEG_CHANNELS, QUALITY_GOOD_MIN, QUALITY_GOOD_MAX } from '../config/constants.js';
 
 /**
@@ -22,11 +23,12 @@ function stdDev(arr) {
 }
 
 /**
- * Pipe muse-js eegReadings through zipSamples for per-sample format.
+ * Pipe muse-js eegReadings through zipSamples for per-sample format, then
+ * the 60 Hz notch filter.
  * zipSamples emits { data: [ch0, ch1, ch2, ch3, AUX], timestamp } per sample.
  */
 export function museToSamples() {
-  return (source) => zipSamples(source);
+  return (source) => zipSamples(source).pipe(notchFilter());
 }
 
 /**
@@ -62,12 +64,13 @@ export function addSignalQuality(windowSize = 256) {
 }
 
 /**
- * Combined pipe: muse eegReadings → zipSamples → add signal quality (throttled).
+ * Combined pipe: muse eegReadings → zipSamples → 60 Hz notch → add signal quality (throttled).
  * Use for live display with quality updates.
  */
 export function eegWithQuality() {
   return (source) =>
     zipSamples(source).pipe(
+      notchFilter(),
       bufferCount(64),
       map((batch) => {
         if (!batch || batch.length === 0) return null;
@@ -89,8 +92,8 @@ export function eegWithQuality() {
 }
 
 /**
- * Raw samples stream (no quality) for recording.
+ * Notch-filtered samples stream (no quality) for recording.
  */
 export function eegSamplesOnly() {
-  return (source) => zipSamples(source);
+  return (source) => zipSamples(source).pipe(notchFilter());
 }
